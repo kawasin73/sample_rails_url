@@ -64,3 +64,6 @@ gem 'rails-i18n'
 gem 'kaminari'
 
 gem 'addressable'
+
+# encrypt
+gem 'bcrypt'
