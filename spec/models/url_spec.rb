@@ -153,52 +153,80 @@ RSpec.describe Url, type: :model do
         it { is_expected.to be_nil }
       end
     end
-  end
 
-  describe 'uniqueness of id' do
-    let(:url_string) { 'http://test.com/test?test=test#test' }
-    subject { Url.parse(url_string) }
-    it { is_expected.to eq(Url.parse(url_string)) }
-  end
-
-  describe 'when duplicate hash' do
-    let(:scheme) { 'http' }
-    let(:host) { 'example.com' }
-    let(:path) { '/path' }
-    let(:url_string) { "#{scheme}://#{host}#{path}" }
-    let(:path_component_hash) { Digest::MD5.hexdigest(path) }
-
-    before do
-      create(:url, scheme: scheme, host: host, path: '/path1', path_component_hash: path_component_hash, hash_number: 0)
+    describe 'uniqueness of id' do
+      let(:url_string) { 'http://test.com/test?test=test#test' }
+      it { is_expected.to eq(Url.parse(url_string)) }
     end
 
-    it do
-      url = Url.parse(url_string)
-      expect(url.path_component_hash).to eq(path_component_hash)
-      expect(url.hash_number).to eq(1)
-    end
+    context 'when duplicate hash' do
+      let(:scheme) { 'http' }
+      let(:host) { 'example.com' }
+      let(:path) { '/path' }
+      let(:url_string) { "#{scheme}://#{host}#{path}" }
+      let(:path_component_hash) { Digest::MD5.hexdigest(path) }
+      context 'when same hash url is created' do
+        before do
+          create(:url, scheme: scheme, host: host, path: '/path1', path_component_hash: path_component_hash, hash_number: 0)
+        end
 
-    context 'when dummy count is 2' do
-      before do
-        create(:url, scheme: scheme, host: host, path: '/path2', path_component_hash: path_component_hash, hash_number: 1)
+        it do
+          expect(subject.path_component_hash).to eq(path_component_hash)
+          expect(subject.hash_number).to eq(1)
+        end
       end
 
-      it do
-        url = Url.parse(url_string)
-        expect(url.path_component_hash).to eq(path_component_hash)
-        expect(url.hash_number).to eq(2)
-      end
-    end
+      context 'when max hash_number 10 was created' do
+        before do
+          create(:url, scheme: scheme, host: host, path: '/path9', path_component_hash: path_component_hash, hash_number: 9)
+          create(:url, scheme: scheme, host: host, path: '/path10', path_component_hash: path_component_hash, hash_number: 10)
+        end
 
-    context 'when hash_number 10 was created' do
-      before do
-        create(:url, scheme: scheme, host: host, path: '/path10', path_component_hash: path_component_hash, hash_number: 10)
+        it do
+          expect(subject.path_component_hash).to eq(path_component_hash)
+          expect(subject.hash_number).to eq(11)
+        end
       end
 
-      it do
-        url = Url.parse(url_string)
-        expect(url.path_component_hash).to eq(path_component_hash)
-        expect(url.hash_number).to eq(11)
+      context 'when url is already created' do
+        let(:created_url) { Url.parse(url_string) }
+        before do
+          created_url
+          create(:url, scheme: scheme, host: host, path: '/path9', path_component_hash: path_component_hash, hash_number: 9)
+        end
+
+        it do
+          expect(subject.path_component_hash).to eq(path_component_hash)
+          expect(subject.hash_number).to eq(created_url.hash_number)
+        end
+      end
+
+      context 'when url is created and deleted and created part1' do
+        let(:max_hash_number) { 9 }
+        before do
+          url = Url.parse(url_string)
+          create(:url, scheme: scheme, host: host, path: '/path9', path_component_hash: path_component_hash, hash_number: max_hash_number)
+          url.destroy!
+        end
+
+        it do
+          expect(subject.path_component_hash).to eq(path_component_hash)
+          expect(subject.hash_number).to eq(max_hash_number + 1)
+        end
+      end
+
+      context 'when url is created and deleted and created part2' do
+        let(:max_hash_number) { 9 }
+        before do
+          create(:url, scheme: scheme, host: host, path: '/path9', path_component_hash: path_component_hash, hash_number: max_hash_number)
+          url = Url.parse(url_string)
+          url.destroy!
+        end
+
+        it do
+          expect(subject.path_component_hash).to eq(path_component_hash)
+          expect(subject.hash_number).to eq(max_hash_number + 1)
+        end
       end
     end
   end
