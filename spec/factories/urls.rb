@@ -19,13 +19,22 @@
 
 FactoryGirl.define do
   factory :url do
-    scheme "MyString"
-    host "MyString"
-    port 1
-    path "MyText"
-    query "MyText"
-    fragment "MyText"
-    path_component_hash "MyString"
-    hash_number 1
+    scheme 'https'
+    host 'test.com'
+    port 0
+    sequence(:path) { |n| "/test#{n}" }
+    query nil
+    fragment nil
+    path_component_hash { Digest::MD5.hexdigest(path_component) }
+    hash_number 0
+
+    transient do
+      path_component do
+        path_component = path
+        path_component += "?#{query}" if query.present?
+        path_component += "##{fragment}" if fragment.present?
+        path_component
+      end
+    end
   end
 end

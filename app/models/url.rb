@@ -52,6 +52,8 @@ class Url < ApplicationRecord
 
   def find_or_create(max_retry: 3)
     try_to_save
+  rescue ActiveRecord::RecordInvalid
+    nil
   rescue ActiveRecord::RecordNotUnique
     if max_retry > 0
       max_retry -= 1
