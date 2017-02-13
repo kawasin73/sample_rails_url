@@ -10,9 +10,21 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 0) do
+ActiveRecord::Schema.define(version: 20170213094111) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+
+  create_table "urls", force: :cascade do |t|
+    t.string  "scheme",                                     null: false
+    t.string  "host",                                       null: false
+    t.integer "port",                           default: 0, null: false
+    t.text    "path",                                       null: false
+    t.text    "query"
+    t.text    "fragment"
+    t.string  "path_component_hash", limit: 32,             null: false
+    t.integer "hash_number",                    default: 0, null: false
+    t.index ["host", "scheme", "port", "path_component_hash", "hash_number"], name: "url_unique_index", unique: true, using: :btree
+  end
 
 end
