@@ -42,6 +42,7 @@ RSpec.describe Url, type: :model do
     end
     describe '#host' do
       it { is_expected.to validate_presence_of(:host) }
+      it { is_expected.to validate_length_of(:host).is_at_most(256) }
     end
     describe '#port' do
       it { is_expected.to validate_presence_of(:port) }
@@ -227,6 +228,16 @@ RSpec.describe Url, type: :model do
           expect(subject.path_component_hash).to eq(path_component_hash)
           expect(subject.hash_number).to eq(max_hash_number + 1)
         end
+      end
+    end
+
+    describe 'retry' do
+      let(:url) { build(:url) }
+      subject { url.find_or_create(max_retry: max_retry) }
+      let(:max_retry) { 3 }
+      it do
+        expect(url).to receive(:try_to_save).exactly(max_retry + 1).times.and_raise(ActiveRecord::RecordNotUnique)
+        expect { subject }.to raise_error(ActiveRecord::RecordNotUnique)
       end
     end
   end

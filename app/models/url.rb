@@ -19,7 +19,7 @@
 
 class Url < ApplicationRecord
   validates :scheme, presence: true
-  validates :host, presence: true
+  validates :host, presence: true, length: { maximum: 256 }
   validates :port, presence: true
   validates :path, presence: true
   validates :path_component_hash, presence: true, length: { is: 32 }
@@ -59,7 +59,7 @@ class Url < ApplicationRecord
       max_retry -= 1
       retry
     else
-      nil
+      raise
     end
   end
 
