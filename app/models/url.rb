@@ -90,7 +90,7 @@ class Url < ApplicationRecord
       if found_urls.empty?
         begin
           self.hash_number = urls.map(&:hash_number).max + 1
-          self.save!
+          self.class.import!([self, *urls], on_duplicate_key_update: [:hash_number])
           self
         rescue ActiveRecord::RecordNotUnique
           self.hash_number = 0
