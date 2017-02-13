@@ -62,3 +62,5 @@ gem 'seed-fu'
 gem 'activerecord-import'
 gem 'rails-i18n'
 gem 'kaminari'
+
+gem 'addressable'
