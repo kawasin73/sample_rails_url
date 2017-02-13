@@ -63,7 +63,7 @@ gem 'activerecord-import'
 gem 'rails-i18n'
 gem 'kaminari'
 
-gem 'addressable'
+gem 'addressable', '2.4.0'
 
 # encrypt
 gem 'bcrypt'

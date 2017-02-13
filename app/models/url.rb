@@ -66,25 +66,34 @@ class Url < ApplicationRecord
   end
 
   def path_component
-    path_component = path
-    path_component += "?#{query}" if query.present?
-    path_component += "##{fragment}" if fragment.present?
-    path_component
+    if @path_component.nil?
+      @path_component = path
+      @path_component += "?#{query}" if query.present?
+      @path_component += "##{fragment}" if fragment.present?
+      @path_component
+    else
+      @path_component
+    end
   end
 
   private
 
   def try_to_save
-    urls = Url.where(scheme: scheme, host: host, port: port, path_component_hash: hash).to_a
+    urls = Url.where(scheme: scheme, host: host, port: port, path_component_hash: path_component_hash).to_a
     if urls.empty?
       self.save!
       self
     else
       found_urls = urls.select { |url| url.path_component == self.path_component }
       if found_urls.empty?
-        self.hash_number = urls.map(&:hash_number).max + 1
-        self.save!
-        self
+        begin
+          self.hash_number = urls.map(&:hash_number).max + 1
+          self.save!
+          self
+        rescue ActiveRecord::RecordNotUnique
+          self.hash_number = 0
+          raise
+        end
       elsif found_urls.count == 1
         found_urls.first
       else
