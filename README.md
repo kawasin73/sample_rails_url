@@ -1,24 +1,11 @@
-# README
+# sample_rails_url
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+save url as model uniquely
 
-Things you may want to cover:
+## Usage
 
-* Ruby version
-
-* System dependencies
-
-* Configuration
-
-* Database creation
-
-* Database initialization
-
-* How to run the test suite
-
-* Services (job queues, cache servers, search engines, etc.)
-
-* Deployment instructions
-
-* ...
+```ruby
+url = Url.parse("https://sample.com/sample?test=value#test")
+url # <Url:0x00000002787268 id: 1, scheme: "https", host: "sample.com", port: 0, path: "/sample", query: "test=value", fragment: "test", path_component_hash: "3ecfe79d5397c210297c17d14b97f866", hash_number: 0>
+url.to_s # "https://sample.com/sample?test=value#test"
+```
