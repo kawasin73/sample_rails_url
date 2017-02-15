@@ -78,29 +78,31 @@ class Url < ApplicationRecord
     end
   end
 
+  def same_hash_urls
+    self.class.where(scheme: scheme, host: host, port: port, path_component_hash: path_component_hash)
+  end
+
   private
 
   def try_to_save
-    urls = Url.where(scheme: scheme, host: host, port: port, path_component_hash: path_component_hash).to_a
+    urls = same_hash_urls.to_a
     if urls.empty?
+      self.hash_number = 0
       self.save!
-      self
-    else
-      found_urls = urls.select { |url| url.path_component == self.path_component }
-      if found_urls.empty?
-        begin
-          self.hash_number = urls.map(&:hash_number).max + 1
-          self.class.import!([self, *urls], on_duplicate_key_update: [:hash_number])
-          self
-        rescue ActiveRecord::RecordNotUnique
-          self.hash_number = 0
-          raise
-        end
-      elsif found_urls.count == 1
-        found_urls.first
-      else
-        raise "not_unique_urls! url: #{self.to_s}, ids: #{found_urls.map(&:id)}"
+      return self
+    end
+
+    found_urls = urls.select { |url| url.path_component == self.path_component }
+    if found_urls.empty?
+      self.hash_number = urls.map(&:hash_number).max + 1
+      ApplicationRecord.transaction do
+        self.class.import!([self, *urls], on_duplicate_key_update: [:hash_number])
       end
+      self
+    elsif found_urls.count == 1
+      found_urls.first
+    else
+      raise "not_unique_urls! url: #{self.to_s}, ids: #{found_urls.map(&:id)}"
     end
   end
 
